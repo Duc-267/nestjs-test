@@ -6,7 +6,7 @@ import { User } from './user.schema';
 @Schema()
 export class AuthSession extends Document {
    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name })
-    userId: mongoose.Schema.Types.ObjectId;
+    userId: User;
 
     @Prop({ required: true })
     accessToken: string;

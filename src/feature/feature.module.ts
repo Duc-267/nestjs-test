@@ -5,6 +5,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
 // import { EmailModule } from './email/email.module';
 import { UserModule } from './user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { SeedModule } from 'src/shared/seed/seed.module';
 
 
 @Module({
@@ -12,6 +13,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
         CqrsModule,
         AuthenticationModule,
         UserModule,
+        SeedModule,
         // EmailModule,
     ],
     controllers: [],

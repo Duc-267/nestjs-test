@@ -9,6 +9,7 @@ import { LoginDto } from './login.dto';
 import { AuthSession } from 'src/data/schema/auth-session.schema';
 import { BaseResponse } from 'src/shared/interfaces/base.response';
 import { AuthRo } from '../../response-objects/auth.ro';
+import { globalValue } from 'src/shared/global-settings';
 
 export class LoginCommand {
   constructor(public readonly dto: LoginDto) {}
@@ -24,7 +25,7 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand> {
 
   async execute(command: LoginCommand): Promise<BaseResponse<AuthRo>> {
     try {
-      const { email, password, deviceInfo='abc', ipAddress='::2' } = command.dto;
+      const { email, password } = command.dto;
       const user = await this.userModel.findOne(
         { email },
         {
@@ -49,8 +50,8 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand> {
         user._id as string,
         token,
         refreshToken,
-        deviceInfo,
-        ipAddress,
+        globalValue.deviceInfo,
+        globalValue.ipAddress,
       );
       return new OkResponse(
         this.authenticationService.mappingToResponseAuthRo(user, {

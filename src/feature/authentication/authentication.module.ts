@@ -7,26 +7,16 @@ import { CommandHandlers } from './handlers';
 import { Services } from './services';
 import { SharedModule } from 'src/shared/shared.module';
 import { DataModule } from 'src/data/data.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ExtractRequestInformationInterceptor } from 'src/shared/interceptors/extract-request-information.interceptor';
-
+import { PermissionGuard } from 'src/shared/guards/permission.guard';
 @Module({
-  imports: [
-    CqrsModule,
-    DataModule,
-    SharedModule,
-    JwtModule.register({
-      signOptions: {
-        expiresIn: process.env.TOKEN_EXPIRED,
-      },
-    }),
-  ],
+  imports: [CqrsModule, DataModule, SharedModule, JwtModule.register({})],
   providers: [
     AppCustomAuthGuard,
+    PermissionGuard,
     ...CommandHandlers,
     ...Services,
   ],
   controllers: [AuthenticationController],
-  exports: [AppCustomAuthGuard, JwtModule, ...Services],
+  exports: [AppCustomAuthGuard, PermissionGuard, JwtModule, ...Services],
 })
 export class AuthenticationModule {}

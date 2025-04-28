@@ -19,14 +19,14 @@ export class AuthenticationService {
             { id: user._id, email: user.email },
             {
                 secret: user.password,
-                expiresIn: this.configService.get('TOKEN_EXPIRED'),
+                expiresIn: Number(this.configService.get('TOKEN_EXPIRED')),
             },
         );
         const refreshToken = this.jwtService.sign(
             { id: user._id, email: user.email },
             {
                 secret: token,
-                expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRED'),
+                expiresIn: Number(this.configService.get('REFRESH_TOKEN_EXPIRED')),
             },
         );
 

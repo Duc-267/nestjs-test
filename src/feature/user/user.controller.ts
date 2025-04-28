@@ -8,10 +8,13 @@ import { BaseResponse } from 'src/shared/interfaces/base.response';
 import { UserAttachment } from 'src/shared/interfaces/user-attachment';
 import { User } from 'src/shared/decorators/user.decorator';
 import { GetUserProfileQuery } from './handlers/get-user-profile';
+import { Permission } from 'src/shared/decorators/permission.decorator';
+import { PermissionEnum } from 'src/shared/enums/permission.enum';
 
 @Controller('users')
-// @UseInterceptors(RefreshTokenInterceptor)
- @UseGuards(AppCustomAuthGuard)
+@Permission([PermissionEnum.MANAGE_USERS])
+@UseInterceptors(RefreshTokenInterceptor)
+@UseGuards(AppCustomAuthGuard, PermissionGuard)
 export class UserController {
     constructor(
         private readonly queryBus: QueryBus,

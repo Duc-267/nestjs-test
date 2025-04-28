@@ -11,10 +11,4 @@ export class LoginDto {
 
     @IsNotEmpty()
     password: string;
-
-    @IsOptional()
-    deviceInfo?: string;
-
-    @IsOptional()
-    ipAddress?: string;
 }

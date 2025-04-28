@@ -5,6 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { globalValue } from '../global-settings';
 
 @Injectable()
 export class ExtractRequestInformationInterceptor implements NestInterceptor {
@@ -14,12 +15,10 @@ export class ExtractRequestInformationInterceptor implements NestInterceptor {
       request.headers['x-forwarded-for'] || request.connection.remoteAddress;
     const deviceInfo = request.headers['user-agent'];
 
-    if (ipAddress) {
-      request.body.ipAddress = ipAddress;
-    }
-    if (deviceInfo) {
-      request.body.deviceInfo = deviceInfo;
-    }
+    if (ipAddress && deviceInfo) {
+      globalValue.ipAddress = ipAddress;
+      globalValue.deviceInfo = deviceInfo
+    }   
     return next.handle();
   }
 }
