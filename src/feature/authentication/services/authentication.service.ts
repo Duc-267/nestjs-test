@@ -10,9 +10,25 @@ export interface AuthToken {
     refreshToken: string;
 }
 
+export interface AccessToken {
+    token: string;
+}
+
 @Injectable()
 export class AuthenticationService {
     constructor(@Inject(User.name) private userModel: Model<User>, private readonly jwtService: JwtService, private readonly configService: ConfigService) {}
+
+    generateNewToken(user: User): AccessToken {
+        const token = this.jwtService.sign(
+            { id: user._id, email: user.email },
+            {
+                secret: user.password,
+                expiresIn: Number(this.configService.get('TOKEN_EXPIRED')),
+            },
+        );
+
+        return { token };
+    }
 
     generateTokenAndRefreshToken(user: User): AuthToken {
         const token = this.jwtService.sign(

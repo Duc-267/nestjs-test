@@ -5,27 +5,27 @@ import { User } from 'src/data/schema/user.schema';
 import { AuthenticationService } from '../../services/authentication.service';
 import { AuthSession } from 'src/data/schema/auth-session.schema';
 import { BaseResponse } from 'src/shared/interfaces/base.response';
-import { LogoutDto } from './logout.dto';
+import { LogoutAllDto } from './logout-all.dto';
 import { AuthSessionStatusEnum } from 'src/shared/enums/auth-section-status.enum';
 import { OkResponse } from 'src/shared/interfaces/ok.response';
 import { globalValue } from 'src/shared/global-settings';
 
-export class LogoutCommand {
-  constructor(public readonly dto: LogoutDto) {}
+export class LogoutAllCommand {
+  constructor(public readonly dto: LogoutAllDto) {}
 }
 
-@CommandHandler(LogoutCommand)
-export class LogoutCommandHandler implements ICommandHandler<LogoutCommand> {
+@CommandHandler(LogoutAllCommand)
+export class LogoutAllCommandHandler implements ICommandHandler<LogoutAllCommand> {
   constructor(
     @Inject(AuthSession.name) private authSessionModel: Model<AuthSession>,
   ) {}
 
-  async execute(command: LogoutCommand): Promise<BaseResponse<string>> {
+  async execute(command: LogoutAllCommand): Promise<BaseResponse<string>> {
     try {
       const { token } = command.dto;
       const session = await this.authSessionModel.findOne({
-        refreshToken: token,
-      });
+        accessToken: token,
+      }).populate('user')
       if (
         !session ||
         session.status === AuthSessionStatusEnum.REVOKED ||
@@ -34,9 +34,9 @@ export class LogoutCommandHandler implements ICommandHandler<LogoutCommand> {
       ) {
         throw new NotFoundException('Session not found');
       }
-      await this.authSessionModel.updateOne(
+      await this.authSessionModel.updateMany(
         { status: AuthSessionStatusEnum.REVOKED },
-        { _id: new mongoose.Types.ObjectId(session._id as string) },
+        { userId: new mongoose.Types.ObjectId(session.user.id) },
       );
       return new OkResponse('Logout successful');
     } catch (error) {

@@ -43,12 +43,12 @@ export class AppCustomAuthGuard implements CanActivate {
         .findOne({
           accessToken: token[1],
         })
-        .populate('userId');
+        .populate('user');
       if (!session || session.status === AuthSessionStatusEnum.REVOKED) {
         return false;
       }
       await this.jwtService.verifyAsync(token[1], {
-        secret: session.userId.password,
+        secret: session.user.password,
       });
     } catch (e) {
       const refreshToken = request.headers.refreshtoken;
@@ -61,14 +61,19 @@ export class AppCustomAuthGuard implements CanActivate {
         throw new UnauthorizedException('Refresh Token invalid');
       }
 
-      const authTokenNew =
-        this.authenticationService.generateTokenAndRefreshToken(session.userId);
-
+      const authTokenNew = this.authenticationService.generateNewToken(
+        session.user,
+      );
+      await this.authSessionModel.updateOne(
+        {
+          accessToken: authTokenNew.token,
+        },
+        { where: { _id: session._id } },
+      );
       request.headers.newToken = authTokenNew.token;
-      request.headers.newRefreshToken = authTokenNew.refreshToken;
     }
 
-    request.user = AppCustomAuthGuard.getUserAttachment(session.userId);
+    request.user = AppCustomAuthGuard.getUserAttachment(session.user);
     return true;
   }
 
