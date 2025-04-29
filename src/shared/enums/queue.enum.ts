@@ -1,5 +1,6 @@
 export enum QueueNameEnum {
-    AUDIT_LOG = 'audit-log'
+    AUDIT_LOG = 'audit-log',
+    REFRESH_TOKEN_EXPIRY = 'refresh-token-expiry',
 }
 
 export enum QueueJobNameEnum {

@@ -10,11 +10,10 @@ import { BaseResponse } from 'src/shared/interfaces/base.response';
 import { AuthRo } from '../../response-objects/auth.ro';
 import { globalValue } from 'src/shared/global-settings';
 import { AuthSessionStatusEnum } from 'src/shared/enums/auth-section-status.enum';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { AuditLogDto } from 'src/shared/interfaces/audit-log';
 import { QueueJobNameEnum, QueueNameEnum } from 'src/shared/enums/queue.enum';
 import { AuditLogService } from '../../services/audit-log.service';
+import Redis from 'ioredis';
 
 export class LoginCommand {
   constructor(public readonly dto: LoginDto) {}
@@ -50,7 +49,7 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand> {
         throw new BadRequestException('Invalid password');
       }
       const { token, refreshToken } =
-        this.authenticationService.generateTokenAndRefreshToken(user);
+        await this.authenticationService.generateTokenAndRefreshToken(user);
 
       await this.invalidateSession(
         user._id as string,

@@ -11,14 +11,23 @@ import { PermissionGuard } from 'src/shared/guards/permission.guard';
 import { BullModule } from '@nestjs/bullmq';
 import { AuditLogProcessor } from '../intergration/bull-queue/audit-log.processor';
 import { QueueNameEnum, QueuePrefixEnum } from 'src/shared/enums/queue.enum';
+import { RedisModule } from '@nestjs-modules/ioredis';
 @Module({
   imports: [
     CqrsModule,
     DataModule,
     SharedModule,
     JwtModule.register({}),
+    RedisModule.forRoot({
+      type: 'single',
+      url: 'redis://localhost:6379',     // Configure your Redis port
+    }),
     BullModule.registerQueue({
       name: QueueNameEnum.AUDIT_LOG,
+      prefix: QueuePrefixEnum.AUTHENTICATION,
+    }),
+    BullModule.registerQueue({
+      name: QueueNameEnum.REFRESH_TOKEN_EXPIRY,
       prefix: QueuePrefixEnum.AUTHENTICATION,
     }),
   ],

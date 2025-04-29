@@ -44,16 +44,6 @@ export class UpdatePatientRecordCommandHandler
       treatmentPlan,
       medicationPrescribed,
     });
-    await this.userModel.updateOne(
-      {
-        _id: patientId,
-      },
-      {
-        $push: {
-          patientRecord: patientRecord._id,
-        },
-      }
-    );
     return patientRecord;
     } catch (error) {
       throw new NotFoundException('Patient not found!');

@@ -4,6 +4,11 @@ import { Model } from 'mongoose';
 import { AuthRo } from '../response-objects/auth.ro';
 import { User } from 'src/data/schema/user.schema';
 import { ConfigService } from '@nestjs/config';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
+import { QueueNameEnum } from 'src/shared/enums/queue.enum';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 export interface AuthToken {
     token: string;
@@ -16,7 +21,13 @@ export interface AccessToken {
 
 @Injectable()
 export class AuthenticationService {
-    constructor(@Inject(User.name) private userModel: Model<User>, private readonly jwtService: JwtService, private readonly configService: ConfigService) {}
+    constructor(
+        private readonly jwtService: JwtService, 
+        private readonly configService: ConfigService,
+        @InjectRedis() private readonly redis: Redis,
+        @InjectQueue(QueueNameEnum.REFRESH_TOKEN_EXPIRY)
+            private readonly refreshTokenExpiryQueue: Queue,
+    ) {}
 
     generateNewToken(user: User): AccessToken {
         const token = this.jwtService.sign(
@@ -30,7 +41,7 @@ export class AuthenticationService {
         return { token };
     }
 
-    generateTokenAndRefreshToken(user: User): AuthToken {
+    async generateTokenAndRefreshToken(user: User): Promise<AuthToken> {
         const token = this.jwtService.sign(
             { id: user._id, email: user.email },
             {
@@ -45,7 +56,10 @@ export class AuthenticationService {
                 expiresIn: Number(this.configService.get('REFRESH_TOKEN_EXPIRED')),
             },
         );
-
+        const redisKey = `refresh_token:${user._id}`;
+        const ttl = 60 * 60 * 24 * 7; // 1 week
+    
+        await this.redis.set(redisKey, refreshToken, 'EX', ttl);
         return { token, refreshToken };
     }
 
