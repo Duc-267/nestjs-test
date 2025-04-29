@@ -8,6 +8,7 @@ import { OkResponse } from 'src/shared/interfaces/ok.response';
 import { AuditLogService } from 'src/feature/authentication/services/audit-log.service';
 import { AuditLogDto } from 'src/shared/interfaces/audit-log';
 import { QueueJobNameEnum } from 'src/shared/enums/queue.enum';
+import { PatientRecord } from 'src/data/schema/patient-record.schema';
 
 export class GetPatientProfileQuery {
   constructor(
@@ -22,6 +23,7 @@ export class GetPatientProfileQueryHandler
 {
   constructor(
     @Inject(User.name) private userModel: Model<User>,
+    @Inject(PatientRecord.name) private patientModel: Model<PatientRecord>,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -33,7 +35,9 @@ export class GetPatientProfileQueryHandler
     });
 
     if (!user) throw new NotFoundException('User not found!');
-
+    const patient = await this.patientModel.find({
+      patientId: userId,
+    });
     const auditLog: AuditLogDto = {
       userId: loggedUserId,
       action: QueueJobNameEnum.VIEW_PATIENT_PROFILE,
@@ -47,6 +51,14 @@ export class GetPatientProfileQueryHandler
       id: user.id,
       email: user.email,
       role: user.role,
+      patientRecords: patient.map((patient) => {
+        return {
+          appointmentDate: (patient.appointmentDate)?.toString(),
+          diagnosis: patient.diagnosis,
+          treatmentPlan: patient.treatmentPlan,
+          medicationPrescribed: patient.medicationPrescribed,
+        };
+      }),
     });
   }
 }

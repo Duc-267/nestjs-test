@@ -41,7 +41,7 @@ export class AuthenticationService {
         const refreshToken = this.jwtService.sign(
             { id: user._id, email: user.email },
             {
-                secret: token,
+                secret: this.configService.get('REFRESH_TOKEN_SECRET'),
                 expiresIn: Number(this.configService.get('REFRESH_TOKEN_EXPIRED')),
             },
         );

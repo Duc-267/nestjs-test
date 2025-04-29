@@ -30,6 +30,8 @@ import { AppCustomAuthGuard } from 'src/shared/guards/app-custom-auth.guard';
 import { PermissionGuard } from 'src/shared/guards/permission.guard';
 import { GetUserSessionQuery } from './handlers/get-user-session/get-user-session';
 import { LogoutAllCommand } from './handlers/logout-all/logout-all';
+import { RefreshTokenDto } from './handlers/refresh-token/refresh-token.dto';
+import { RefreshTokenCommand } from './handlers/refresh-token/refresh-token';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -48,6 +50,15 @@ export class AuthenticationController {
   @Post('login')
   public async login(@Body() dto: LoginDto): Promise<BaseResponse<AuthRo>> {
     return this.commandBus.execute(new LoginCommand(dto));
+  }
+
+  @UseGuards(AppCustomAuthGuard)
+  @Post('refresh')
+  public async refreshToken(
+    @Body() dto: RefreshTokenDto,
+    @User() loggedUser: UserAttachment,
+  ): Promise<BaseResponse<AuthRo>> {
+    return this.commandBus.execute(new RefreshTokenCommand(dto, loggedUser.id));
   }
 
   @UseGuards(AppCustomAuthGuard)

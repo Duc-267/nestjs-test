@@ -14,6 +14,7 @@ import { UserAttachment } from 'src/shared/interfaces/user-attachment';
 import { AuthSession } from 'src/data/schema/auth-session.schema';
 import { AuthSessionStatusEnum } from '../enums/auth-section-status.enum';
 import { AuthenticationService } from 'src/feature/authentication/services/authentication.service';
+import { ConfigService } from '@nestjs/config';
 
 export interface JwtPayload {
   id: string;
@@ -26,6 +27,7 @@ export class AppCustomAuthGuard implements CanActivate {
     @Inject(AuthSession.name) private authSessionModel: Model<AuthSession>,
     private readonly authenticationService: AuthenticationService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -57,7 +59,7 @@ export class AppCustomAuthGuard implements CanActivate {
       }
 
       try {
-        await this.jwtService.verifyAsync(refreshToken, { secret: token[1] });
+        await this.jwtService.verifyAsync(refreshToken, { secret: this.configService.get('REFRESH_TOKEN_SECRET') });
       } catch (e) {
         throw new UnauthorizedException('Refresh Token invalid');
       }
@@ -83,6 +85,6 @@ export class AppCustomAuthGuard implements CanActivate {
       id: user.id,
       email: user.email,
       role: user.role,
-    } as UserAttachment;
+    };
   }
 }

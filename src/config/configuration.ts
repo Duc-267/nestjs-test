@@ -6,4 +6,5 @@ export default () => ({
         tokenExpired: process.env.TOKEN_EXPIRED,
         refreshTokenExpired:
         process.env.REFRESH_TOKEN_EXPIRED,
+        refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
   });

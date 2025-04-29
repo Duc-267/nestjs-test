@@ -6,6 +6,7 @@ export enum QueueJobNameEnum {
     LOGIN = 'login',
     LOGOUT = 'logout',
     LOGOUT_ALL = 'logout-all',
+    REFRESH_TOKEN = 'refresh-token',
     GET_USER_PROFILE = 'get-user-profile',
     GET_USER_SESSION = 'get-user-session',
     VIEW_USER_PROFILE_ADMIN = 'view-user-profile-admin',

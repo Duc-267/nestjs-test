@@ -8,13 +8,13 @@ import config from './config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BullModule } from '@nestjs/bullmq';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [config],
     }),
+    
     BullModule.forRootAsync({
 			inject: [ConfigService],
 			useFactory: async (configService: ConfigService) => ({

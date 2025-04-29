@@ -3,15 +3,13 @@ import * as bcrypt from 'bcrypt';
 import mongoose, { Document, Types } from 'mongoose';
 import { UserRoleEnum } from 'src/shared/enums/user-role.enum';
 import { AuthSession } from './auth-session.schema';
+import { PatientRecord } from './patient-record.schema';
 
 export interface User {
     checkPassword(attempt: string): boolean;
 }
-
-
 @Schema()
 export class User extends Document {
-    
     @Prop({ unique: true, maxlength: 255 })
     email: string;
 
@@ -26,6 +24,9 @@ export class User extends Document {
 
     @Prop({ default: Date.now })
     updatedAt: Date;
+
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: PatientRecord.name })
+    patientRecords: Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
