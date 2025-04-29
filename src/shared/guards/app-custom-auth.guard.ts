@@ -40,20 +40,21 @@ export class AppCustomAuthGuard implements CanActivate {
     let session: AuthSession | null = null;
     try {
       session = await this.authSessionModel
-        .findOne({
-          accessToken: token[1],
-        })
-        .populate('user');
+      .findOne({
+        accessToken: token[1],
+      })
+      .populate('user');
       if (!session || session.status === AuthSessionStatusEnum.REVOKED) {
-        return false;
+        throw new UnauthorizedException('Session not found');
       }
       await this.jwtService.verifyAsync(token[1], {
         secret: session.user.password,
       });
     } catch (e) {
       const refreshToken = request.headers.refreshtoken;
-      if (!(e instanceof TokenExpiredError) || !refreshToken || !session)
+      if (!(e instanceof TokenExpiredError) || !refreshToken || !session ){
         throw new UnauthorizedException('Token invalid');
+      }
 
       try {
         await this.jwtService.verifyAsync(refreshToken, { secret: token[1] });

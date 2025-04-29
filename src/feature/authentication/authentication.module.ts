@@ -8,11 +8,24 @@ import { Services } from './services';
 import { SharedModule } from 'src/shared/shared.module';
 import { DataModule } from 'src/data/data.module';
 import { PermissionGuard } from 'src/shared/guards/permission.guard';
+import { BullModule } from '@nestjs/bullmq';
+import { AuditLogProcessor } from '../intergration/bull-queue/audit-log.processor';
+import { QueueNameEnum, QueuePrefixEnum } from 'src/shared/enums/queue.enum';
 @Module({
-  imports: [CqrsModule, DataModule, SharedModule, JwtModule.register({})],
+  imports: [
+    CqrsModule,
+    DataModule,
+    SharedModule,
+    JwtModule.register({}),
+    BullModule.registerQueue({
+      name: QueueNameEnum.AUDIT_LOG,
+      prefix: QueuePrefixEnum.AUTHENTICATION,
+    }),
+  ],
   providers: [
     AppCustomAuthGuard,
     PermissionGuard,
+    AuditLogProcessor,
     ...CommandHandlers,
     ...Services,
   ],

@@ -6,6 +6,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { UserModule } from './user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { SeedModule } from 'src/shared/seed/seed.module';
+import { PatientModule } from './patient/patient.module';
 
 
 @Module({
@@ -14,6 +15,7 @@ import { SeedModule } from 'src/shared/seed/seed.module';
         AuthenticationModule,
         UserModule,
         SeedModule,
+        PatientModule
         // EmailModule,
     ],
     controllers: [],

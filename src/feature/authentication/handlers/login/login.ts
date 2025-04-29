@@ -2,7 +2,6 @@ import { BadRequestException, Inject, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import mongoose, { Model } from 'mongoose';
 import { User } from 'src/data/schema/user.schema';
-import * as bcrypt from 'bcrypt';
 import { OkResponse } from 'src/shared/interfaces/ok.response';
 import { AuthenticationService } from '../../services/authentication.service';
 import { LoginDto } from './login.dto';
@@ -10,6 +9,12 @@ import { AuthSession } from 'src/data/schema/auth-session.schema';
 import { BaseResponse } from 'src/shared/interfaces/base.response';
 import { AuthRo } from '../../response-objects/auth.ro';
 import { globalValue } from 'src/shared/global-settings';
+import { AuthSessionStatusEnum } from 'src/shared/enums/auth-section-status.enum';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { AuditLogDto } from 'src/shared/interfaces/audit-log';
+import { QueueJobNameEnum, QueueNameEnum } from 'src/shared/enums/queue.enum';
+import { AuditLogService } from '../../services/audit-log.service';
 
 export class LoginCommand {
   constructor(public readonly dto: LoginDto) {}
@@ -20,6 +25,7 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand> {
   constructor(
     @Inject(User.name) private userModel: Model<User>,
     @Inject(AuthSession.name) private authSessionModel: Model<AuthSession>,
+    private readonly auditLogService: AuditLogService,
     private readonly authenticationService: AuthenticationService,
   ) {}
 
@@ -46,13 +52,24 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand> {
       const { token, refreshToken } =
         this.authenticationService.generateTokenAndRefreshToken(user);
 
+      await this.invalidateSession(
+        user._id as string,
+        globalValue.ipAddress,
+        globalValue.deviceInfo,
+      );
       await this.saveSessionInfo(
         user._id as string,
         token,
         refreshToken,
-        globalValue.deviceInfo,
         globalValue.ipAddress,
+        globalValue.deviceInfo,
       );
+      const auditLog: AuditLogDto = {
+        userId: user._id as string,
+        action: QueueJobNameEnum.LOGIN,
+        endpoint: 'auth/login'
+      };
+      await this.auditLogService.storeLog(auditLog, QueueJobNameEnum.LOGIN);
       return new OkResponse(
         this.authenticationService.mappingToResponseAuthRo(user, {
           token,
@@ -68,9 +85,9 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand> {
     userId: string,
     accessToken: string,
     refreshToken: string,
-    deviceInfo?: string,
     ipAddress?: string,
-  ): Promise<any> {
+    deviceInfo?: string,
+  ): Promise<void> {
     const session = new this.authSessionModel({
       userId: new mongoose.Types.ObjectId(userId),
       accessToken,
@@ -79,5 +96,20 @@ export class LoginCommandHandler implements ICommandHandler<LoginCommand> {
       ipAddress,
     });
     await session.save();
+  }
+
+  private async invalidateSession(
+    userId: string,
+    ipAddress?: string,
+    deviceInfo?: string,
+  ): Promise<void> {
+    await this.authSessionModel.updateMany(
+      {
+        userId: new mongoose.Types.ObjectId(userId),
+        ipAddress,
+        deviceInfo,
+      },
+      { status: AuthSessionStatusEnum.REVOKED },
+    );
   }
 }

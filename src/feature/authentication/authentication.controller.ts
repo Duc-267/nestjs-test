@@ -3,8 +3,10 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   UseGuards,
   UseInterceptors,
+  Param,
 } from '@nestjs/common';
 import { BaseResponse } from 'src/shared/interfaces/base.response';
 import { AuthRo } from './response-objects/auth.ro';
@@ -26,6 +28,8 @@ import { PermissionEnum } from 'src/shared/enums/permission.enum';
 import { RefreshTokenInterceptor } from 'src/shared/interceptors/refresh-token.interceptor';
 import { AppCustomAuthGuard } from 'src/shared/guards/app-custom-auth.guard';
 import { PermissionGuard } from 'src/shared/guards/permission.guard';
+import { GetUserSessionQuery } from './handlers/get-user-session/get-user-session';
+import { LogoutAllCommand } from './handlers/logout-all/logout-all';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -46,14 +50,22 @@ export class AuthenticationController {
     return this.commandBus.execute(new LoginCommand(dto));
   }
 
+  @UseGuards(AppCustomAuthGuard)
   @Post('logout')
-  public async logout(@Body() dto: LogoutDto): Promise<BaseResponse<any>> {
-    return this.commandBus.execute(new LogoutCommand(dto));
+  public async logout(
+    @Body() dto: LogoutDto,
+    @User() loggedUser: UserAttachment,
+  ): Promise<BaseResponse<string>> {
+    return this.commandBus.execute(new LogoutCommand(loggedUser.id, '', dto));
   }
 
+  @UseGuards(AppCustomAuthGuard)
   @Post('logout-all')
-  public async logoutAll(@Body() dto: LogoutDto): Promise<BaseResponse<any>> {
-    return this.commandBus.execute(new LogoutCommand(dto));
+  public async logoutAll(
+    @Body() dto: LogoutDto,
+    @User() loggedUser: UserAttachment,
+  ): Promise<BaseResponse<string>> {
+    return this.commandBus.execute(new LogoutAllCommand(dto, loggedUser.id));
   }
 
   @Permission([PermissionEnum.VIEW_OWN_PROFILE])
@@ -70,9 +82,20 @@ export class AuthenticationController {
   @UseInterceptors(RefreshTokenInterceptor)
   @UseGuards(AppCustomAuthGuard, PermissionGuard)
   @Get('sessions')
-  async getUserProfile(
+  async getUserSession(
     @User() loggedUser: UserAttachment,
   ): Promise<BaseResponse<UserRo>> {
-    return this.queryBus.execute(new GetUserProfileQuery(loggedUser.id));
+    return this.queryBus.execute(new GetUserSessionQuery(loggedUser.id));
+  }
+
+  @Permission([PermissionEnum.VIEW_OWN_SESSIONS])
+  @UseInterceptors(RefreshTokenInterceptor)
+  @UseGuards(AppCustomAuthGuard, PermissionGuard)
+  @Delete('sessions/:id')
+  async deleteUserSession(
+    @User() loggedUser: UserAttachment,
+    @Param('id') sessionId: string,
+  ): Promise<BaseResponse<UserRo>> {
+    return this.commandBus.execute(new LogoutCommand(loggedUser.id, sessionId));
   }
 }
