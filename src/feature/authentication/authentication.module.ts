@@ -18,10 +18,10 @@ import { RedisModule } from '@nestjs-modules/ioredis';
     DataModule,
     SharedModule,
     JwtModule.register({}),
-    RedisModule.forRoot({
-      type: 'single',
-      url: 'redis://localhost:6379',     // Configure your Redis port
-    }),
+    // RedisModule.forRoot({
+    //   type: 'single',
+    //   url: 'redis://localhost:6379',     // Configure your Redis port
+    // }),
     BullModule.registerQueue({
       name: QueueNameEnum.AUDIT_LOG,
       prefix: QueuePrefixEnum.AUTHENTICATION,

@@ -18,10 +18,10 @@ import { RedisModule } from '@nestjs-modules/ioredis';
       isGlobal: true,
       load: [config],
     }),
-    RedisModule.forRoot({
-      type: 'single',
-      url: 'redis://localhost:6379',
-    }),
+    // RedisModule.forRoot({
+    //   type: 'single',
+    //   url: 'redis://localhost:6379',
+    // }),
     BullModule.forRootAsync({
 			inject: [ConfigService],
 			useFactory: async (configService: ConfigService) => ({

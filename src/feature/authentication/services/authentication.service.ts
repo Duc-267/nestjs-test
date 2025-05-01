@@ -24,9 +24,6 @@ export class AuthenticationService {
     constructor(
         private readonly jwtService: JwtService, 
         private readonly configService: ConfigService,
-        @InjectRedis() private readonly redis: Redis,
-        @InjectQueue(QueueNameEnum.REFRESH_TOKEN_EXPIRY)
-            private readonly refreshTokenExpiryQueue: Queue,
     ) {}
 
     generateNewToken(user: User): AccessToken {
@@ -56,10 +53,10 @@ export class AuthenticationService {
                 expiresIn: Number(this.configService.get('REFRESH_TOKEN_EXPIRED')),
             },
         );
-        const redisKey = `refresh_token:${user._id}`;
-        const ttl = 60 * 60 * 24 * 7; // 1 week
+        // const redisKey = `refresh_token:${user._id}`;
+        // const ttl = 60 * 60 * 24 * 7; // 1 week
     
-        await this.redis.set(redisKey, refreshToken, 'EX', ttl);
+        // await this.redis.set(redisKey, refreshToken, 'EX', ttl);
         return { token, refreshToken };
     }
 
